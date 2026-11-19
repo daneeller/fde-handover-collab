@@ -173,7 +173,9 @@ python -m unittest discover -s tests -v     # 12 项自动化测试
 | ⑤ 部署 | 单端口 HTTP 服务，公网地址见下方 | `server.py`（读 `PORT`，绑定 `0.0.0.0`） |
 
 **在线地址**：<https://handover-defect-mvp.app.workbuddy.host/?sharecode=VEA3NDXHCD>
-（交互文档 `/docs`；API 请求需在 URL 后附 `?sharecode=VEA3NDXHCD`）
+（交互文档 `/docs`；线上 API 需在 URL 后附 `?sharecode=VEA3NDXHCD`，
+并用 `X-Auth-Token: <token>` 传令牌——云端网关会接管 `Authorization` 头；
+本地部署两者皆可）
 
 ### 启动与验收
 

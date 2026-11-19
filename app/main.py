@@ -67,10 +67,17 @@ store = Store()
 
 # ---------- 权限依赖 ----------
 def require(permission: str) -> Callable[..., User]:
-    def dependency(authorization: Optional[str] = Header(default=None)) -> User:
-        if not authorization or not authorization.startswith("Bearer "):
-            raise HTTPException(401, "缺少 Bearer Token")
-        user = auth_store.resolve(authorization.split(" ", 1)[1])
+    def dependency(
+        authorization: Optional[str] = Header(default=None),
+        x_auth_token: Optional[str] = Header(default=None, alias="X-Auth-Token"),
+    ) -> User:
+        # 云端反向代理会接管 Authorization 头，故提供 X-Auth-Token 备用通道
+        token = x_auth_token
+        if not token and authorization and authorization.startswith("Bearer "):
+            token = authorization.split(" ", 1)[1]
+        if not token:
+            raise HTTPException(401, "缺少 Token（Authorization: Bearer 或 X-Auth-Token）")
+        user = auth_store.resolve(token)
         if not user:
             raise HTTPException(401, "Token 无效或已过期")
         if not auth_store.allows(user, permission):
