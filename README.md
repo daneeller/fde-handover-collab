@@ -157,3 +157,48 @@ python -m unittest discover -s tests -v     # 12 项自动化测试
 - <https://github.com/daneeller/fde-technical-solution>
 
 两个原仓库亦保持公开，内容分别对应本仓库的"需求发现"与"方案设计"阶段。
+
+---
+
+## 八、FastAPI MVP（课程最小 MVP 任务）
+
+按白板五要素完整实现，**可运行、可部署、可验收**：
+
+| 要素 | 实现 | 代码 / 文件 |
+| --- | --- | --- |
+| ① FastAPI | 18 个 REST 端点 + 自动交互文档 `/docs`，最小业务闭环：登记 → 定位 → 红线 → 复核 → 审计 | `app/main.py`、`server.py` |
+| ② Harness | G0 口径 / G1 数据 / G2 定位 / G3 红线 / G4 权限 五关可执行评估，**实测 5/5、score=100** | `app/harness.py` |
+| ③ 知识库 | RAG 检索（63 条语料，命中附来源与事实编号）+ LLM Wiki 知识图谱（22 实体 / 17 关系） | `app/knowledge.py`、`knowledge_base/graph.json` |
+| ④ 权限 | 管理员（SaaS）+ inspector / rectifier / auditor / viewer 分层；401/403 明确 | `app/auth.py` |
+| ⑤ 部署 | 单端口 HTTP 服务，公网地址见下方 | `server.py`（读 `PORT`，绑定 `0.0.0.0`） |
+
+**在线地址**：部署后填入。
+
+### 启动与验收
+
+```bash
+pip install -r requirements.txt
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+# 或部署入口：python server.py
+```
+
+```bash
+# 1) 登录取 token
+curl -X POST http://127.0.0.1:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" -d '{"name":"测试管理员","role":"admin"}'
+
+# 2) 定位 + 红线（D-1003 未复验关单 → R1，转人工）
+curl -X POST http://127.0.0.1:8000/api/v1/defects/D-1003/locate \
+  -H "Authorization: Bearer <token>"
+
+# 3) 知识库检索（命中附 fact_id 与 source）
+curl "http://127.0.0.1:8000/api/v1/knowledge/search?q=未复验关单" -H "Authorization: Bearer <token>"
+
+# 4) Harness 五关（预期 score=100.0）
+curl -X POST http://127.0.0.1:8000/api/v1/harness/run -H "Authorization: Bearer <token>"
+
+# 5) 越权验证：viewer 调 locate → HTTP 403；无 token → HTTP 401
+```
+
+完整的 90 分钟研发提示词见 `docs/交房缺陷与整改协同-90分钟MVP研发提示词.docx`，
+含主提示词、接口清单、Harness 流程、知识库规则、权限矩阵、90 分钟排期、启动命令与验收样例。
