@@ -172,7 +172,8 @@ python -m unittest discover -s tests -v     # 12 项自动化测试
 | ④ 权限 | 管理员（SaaS）+ inspector / rectifier / auditor / viewer 分层；401/403 明确 | `app/auth.py` |
 | ⑤ 部署 | 单端口 HTTP 服务，公网地址见下方 | `server.py`（读 `PORT`，绑定 `0.0.0.0`） |
 
-**在线地址**：部署后填入。
+**在线地址**：<https://handover-defect-mvp.app.workbuddy.host/?sharecode=VEA3NDXHCD>
+（交互文档 `/docs`；API 请求需在 URL 后附 `?sharecode=VEA3NDXHCD`）
 
 ### 启动与验收
 
