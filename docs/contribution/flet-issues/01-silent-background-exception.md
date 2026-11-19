@@ -2,6 +2,9 @@
 
 > 已提交：https://github.com/flet-dev/flet/issues/7102 （2026-11-19，状态 OPEN）
 > 从 #7100 拆出，独立跟踪。
+> 维护者 ndonkoHenri 已回复（2026-11-19）；我方补充证据回复：
+> https://github.com/flet-dev/flet/issues/7102#issuecomment-7009674369
+> 回复正文归档：[01-reply-to-maintainer.md](./01-reply-to-maintainer.md)
 
 Split out of #7100 so it can be tracked independently.
 
