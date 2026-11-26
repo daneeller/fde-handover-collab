@@ -19,6 +19,7 @@ if str(ROOT) not in sys.path:
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+from fastapi.responses import HTMLResponse, JSONResponse  # noqa: E402
 from pydantic import BaseModel, Field  # noqa: E402
 
 from src.audit import build_audit  # noqa: E402
@@ -105,14 +106,24 @@ class ReviewRequest(BaseModel):
 
 
 # ---------- 基础与健康 ----------
-@app.get("/")
-def root() -> Dict[str, Any]:
-    return {
+@app.get("/", response_class=HTMLResponse)
+def root(accept: Optional[str] = Header(default=None)):
+    """浏览器访问展示演示界面；API 客户端（Accept: application/json）仍取项目信息。"""
+    if accept and "text/html" in accept:
+        return HTMLResponse((Path(__file__).parent / "ui.html").read_text(encoding="utf-8"))
+    return JSONResponse({
         "project": "交房缺陷与整改协同 · MVP",
         "five_elements": ["FastAPI", "Harness", "知识库(RAG+图谱)", "权限分层", "在线部署"],
         "boundary": "只读试点；不回写工单、不自动关单、不代替客户签字（f05/f32/f40）",
         "docs": "/docs",
-    }
+        "ui": "/ui",
+    })
+
+
+@app.get("/ui", response_class=HTMLResponse, include_in_schema=False)
+def ui() -> HTMLResponse:
+    """面向演示的正常界面首页；调用本服务现有 API 展示真实数据。"""
+    return HTMLResponse((Path(__file__).parent / "ui.html").read_text(encoding="utf-8"))
 
 
 @app.get("/api/v1/health")
