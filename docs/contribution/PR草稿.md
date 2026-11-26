@@ -37,7 +37,7 @@ examples/handover-defect-mvp/
 2. **Prompts are executable**: `python src/main.py --self-test` runs the exact rules
    described in the prompt documents, with no API key or model call.
 3. **Harness gates are runnable**: `POST /api/v1/harness/run` returns a structured
-   G0–G4 report (5/5 on the synthetic sample), instead of a textual checklist only.
+   G0–G4 report on the synthetic sample, instead of a textual checklist only.
 4. **Knowledge base cites sources**: RAG hits return `source` and `fact_id`; the
    knowledge graph is versioned JSON plus Mermaid output.
 5. **Safe by construction**: all outputs carry `needs_confirmation=true`; audit records
@@ -54,7 +54,7 @@ uvicorn app.main:app --reload --port 8000
 curl -X POST http://127.0.0.1:8000/api/v1/harness/run -H "Authorization: Bearer <token>"
 ```
 
-Expected: 12 tests pass; harness score = 100.0 (5/5); all data is synthetic.
+Expected: 12 tests pass; harness gates report pass on the synthetic sample; all data is synthetic.
 
 ### Checklist
 
