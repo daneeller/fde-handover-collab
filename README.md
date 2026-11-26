@@ -6,9 +6,9 @@
 
 ---
 
-## 一、仓库结构与评分对照
+## 一、仓库结构
 
-本仓库按评分明细的四项维度组织：**选题对应 12 + 材料 12 + 代码 + 更新 6**。
+本仓库按业务材料、技术方案、可运行原型与在线 MVP 组织交付物，全部围绕同一业务场景。
 
 ```
 fde-handover-collab/
@@ -26,17 +26,6 @@ fde-handover-collab/
 │   └── data/                             合成样例：6 缺陷 / 7 工单 / 户型字典
 └── tests/                                12 项自动化测试
 ```
-
-### 与高分仓库的对照
-
-| 维度 | 高分仓库（36/40） | 本仓库 |
-| --- | --- | --- |
-| 五类材料 | planting/ 下 01/02/03/04/07 | ✅ property-handover/ 下 01/02/03/04/07，内容为本选题 |
-| README | 9.1 KB | ✅ 本文件 |
-| src 源码 | 有 | ✅ 6 个模块 + 数据 + 12 项测试 |
-| 提示词落成可运行原型 | **缺（被扣分）** | ✅ `rule` 与 `prompt` 双模式均可运行验证 |
-| 提示词来源 | 未交代 | ✅ `提示词来源追溯表.md` 逐条登记来源材料、事实编号、产出物与代码落点 |
-| 仓库公开 | — | ✅ 公开仓库，匿名可检索 |
 
 ---
 
@@ -145,29 +134,18 @@ python -m unittest discover -s tests -v     # 12 项自动化测试
 
 - 需求归纳基于 fde-simulation 的 `workflow-decomposition`、`outcome-risk-matrix` 与 `4-source-convergence` 框架：<https://github.com/kalyvask/fde-simulation>
 - 事实编号 f00–f55 来自合成场景六角色访谈，索引见 `property-handover/02-访谈记录/访谈事实编号索引.md`。
-- `harness` 评估环境已在本机部署，不在本仓库交付范围内。
+- `harness` 五关评估已实现于 `app/harness.py`，作为可运行 MVP 的一部分随仓库交付。
 
 ---
 
-## 七、仓库合并说明
-
-本仓库由以下两个原仓库合并而成，并在其基础上补齐五类材料结构、提示词来源追溯与可运行原型：
-
-- <https://github.com/daneeller/fde-property-handover>
-- <https://github.com/daneeller/fde-technical-solution>
-
-两个原仓库亦保持公开，内容分别对应本仓库的"需求发现"与"方案设计"阶段。
-
----
-
-## 八、FastAPI MVP（课程最小 MVP 任务）
+## 七、FastAPI MVP（课程最小 MVP 任务）
 
 按白板五要素完整实现，**可运行、可部署、可验收**：
 
 | 要素 | 实现 | 代码 / 文件 |
 | --- | --- | --- |
 | ① FastAPI | 18 个 REST 端点 + 自动交互文档 `/docs`，最小业务闭环：登记 → 定位 → 红线 → 复核 → 审计 | `app/main.py`、`server.py` |
-| ② Harness | G0 口径 / G1 数据 / G2 定位 / G3 红线 / G4 权限 五关可执行评估，**实测 5/5、score=100** | `app/harness.py` |
+| ② Harness | G0 口径 / G1 数据 / G2 定位 / G3 红线 / G4 权限 五关可执行评估，返回结构化报告 | `app/harness.py` |
 | ③ 知识库 | RAG 检索（63 条语料，命中附来源与事实编号）+ LLM Wiki 知识图谱（22 实体 / 17 关系） | `app/knowledge.py`、`knowledge_base/graph.json` |
 | ④ 权限 | 管理员（SaaS）+ inspector / rectifier / auditor / viewer 分层；401/403 明确 | `app/auth.py` |
 | ⑤ 部署 | 单端口 HTTP 服务，公网地址见下方 | `server.py`（读 `PORT`，绑定 `0.0.0.0`） |
@@ -197,7 +175,7 @@ curl -X POST http://127.0.0.1:8000/api/v1/defects/D-1003/locate \
 # 3) 知识库检索（命中附 fact_id 与 source）
 curl "http://127.0.0.1:8000/api/v1/knowledge/search?q=未复验关单" -H "Authorization: Bearer <token>"
 
-# 4) Harness 五关（预期 score=100.0）
+# 4) Harness 五关评估
 curl -X POST http://127.0.0.1:8000/api/v1/harness/run -H "Authorization: Bearer <token>"
 
 # 5) 越权验证：viewer 调 locate → HTTP 403；无 token → HTTP 401
