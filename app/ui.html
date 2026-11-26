@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>交房缺陷与整改协同 · MVP</title>
+<style>
+  :root{--ink:#17342e;--muted:#5c7169;--line:#dce4dc;--bg:#f7f9f5;--card:#fff;--green:#2f6b4f;--green-soft:#e7f2ea;--amber:#8a5a00;--amber-soft:#fff5dc;--red:#a33;--red-soft:#fdeaea}
+  *{box-sizing:border-box}
+  body{margin:0;font:15px/1.65 "Microsoft YaHei","PingFang SC",system-ui,sans-serif;color:var(--ink);background:var(--bg)}
+  header{background:#fff;border-bottom:1px solid var(--line);padding:14px 28px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+  .brand h1{margin:0;font-size:19px;letter-spacing:.3px}
+  .brand p{margin:2px 0 0;color:var(--muted);font-size:12.5px}
+  .login{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .login select,.login input,input[type=text],select{padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);font:inherit;font-size:13.5px}
+  button{cursor:pointer;border:1px solid var(--green);background:var(--green);color:#fff;padding:7px 16px;border-radius:6px;font:inherit;font-size:13.5px}
+  button.ghost{background:#fff;color:var(--green)}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .who{font-size:12.5px;color:var(--green);background:var(--green-soft);padding:5px 10px;border-radius:20px}
+  nav{display:flex;gap:0;background:#fff;border-bottom:1px solid var(--line);padding:0 28px;overflow-x:auto}
+  nav button{background:none;color:var(--muted);border:0;border-bottom:2px solid transparent;border-radius:0;padding:11px 16px;white-space:nowrap}
+  nav button.active{color:var(--green);border-bottom-color:var(--green);font-weight:600}
+  main{max-width:1100px;margin:22px auto;padding:0 20px 60px}
+  .panel{display:none}.panel.on{display:block}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-bottom:16px}
+  .card h2{margin:0 0 12px;font-size:16px}
+  .card h3{margin:0 0 8px;font-size:14px}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+  .stat{flex:1;min-width:130px;background:var(--green-soft);border-radius:8px;padding:12px 16px}
+  .stat b{display:block;font-size:22px;color:var(--green)}
+  .stat span{font-size:12px;color:var(--muted)}
+  .tag{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:12px;margin:2px 4px 2px 0;background:#eef2ee;color:var(--muted)}
+  .tag.ok{background:var(--green-soft);color:var(--green)}
+  .tag.warn{background:var(--amber-soft);color:var(--amber)}
+  .tag.red{background:var(--red-soft);color:var(--red)}
+  .defect{border:1px solid var(--line);border-radius:8px;padding:13px 15px;background:#fff}
+  .defect .id{font-weight:600;color:var(--green);font-size:13px}
+  .defect .unit{color:var(--muted);font-size:12.5px;float:right}
+  .defect p{margin:8px 0;font-size:13.5px}
+  .defect .meta{font-size:12px;color:var(--muted);border-top:1px dashed var(--line);padding-top:8px;margin-top:8px}
+  .searchbar{display:flex;gap:8px;margin-bottom:14px}
+  .searchbar input{flex:1;padding:9px 12px;border:1px solid var(--line);border-radius:6px;font-size:14px}
+  .hit{border-left:3px solid var(--green);background:#fbfdfb;padding:9px 13px;margin-bottom:9px;border-radius:0 6px 6px 0;font-size:13.5px}
+  .hit .src{font-size:11.5px;color:var(--muted);margin-top:4px}
+  .gate{border:1px solid var(--line);border-radius:8px;padding:12px 15px;margin-bottom:10px}
+  .gate .gh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .gate .gh b{font-size:14px}
+  .gate ul{margin:6px 0 0;padding-left:18px;font-size:12.5px;color:var(--muted)}
+  .gate li{margin:2px 0}
+  .notice{background:var(--amber-soft);color:#6d4a00;border:1px solid #f0dfa8;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:16px}
+  .hint{color:var(--muted);font-size:12.5px}
+  table{border-collapse:collapse;width:100%;font-size:13px}td,th{border:1px solid var(--line);padding:7px 10px;text-align:left}th{background:#f2f6f1}
+  .err{color:var(--red);font-size:13px;margin:8px 0}
+  details summary{cursor:pointer;color:var(--green);font-size:13px}
+  code{background:#f0f3ef;padding:1px 5px;border-radius:4px;font-size:12px}
+  @media(max-width:640px){header{padding:12px 16px}nav{padding:0 12px}main{padding:0 12px 40px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <h1>交房缺陷与整改协同 · MVP</h1>
+    <p>FastAPI · Harness 评估 · RAG 知识库 · 权限分层 · 在线部署</p>
+  </div>
+  <div class="login">
+    <select id="role" title="选择角色">
+      <option value="admin">租户管理员</option>
+      <option value="inspector">现场验房员</option>
+      <option value="rectifier">整改项目专员</option>
+      <option value="auditor">工程质量经理</option>
+      <option value="viewer">只读观察员</option>
+    </select>
+    <input id="name" type="text" value="界面演示" style="width:110px" title="具名操作人员">
+    <button id="loginBtn">登录</button>
+    <span class="who" id="who" style="display:none"></span>
+  </div>
+</header>
+<nav>
+  <button data-p="overview" class="active">概览</button>
+  <button data-p="defects">缺陷台账</button>
+  <button data-p="kb">知识库检索</button>
+  <button data-p="harness">Harness 评估</button>
+  <button data-p="perm">权限与边界</button>
+</nav>
+<main>
+  <div class="notice">合成数据演示 · 只读试点：不回写工单、不自动关单、不代替客户签字（f05/f32/f40）。所有建议需人工确认。</div>
+  <div id="msg"></div>
+
+  <section class="panel on" id="p-overview">
+    <div class="card">
+      <h2>项目概览</h2>
+      <div class="row" id="stats"><div class="stat"><b>—</b><span>加载中</span></div></div>
+    </div>
+    <div class="card">
+      <h2>五要素对照</h2>
+      <div class="grid">
+        <div class="defect"><span class="id">① FastAPI 业务闭环</span><p>缺陷登记 → 部位定位 → 红线识别 → 人工复核留痕 → 审计记录，13 个接口可直接调用。</p></div>
+        <div class="defect"><span class="id">② Harness 评估</span><p>G0–G4 五道关卡自动打分，覆盖口径、数据、定位、红线、权限边界。</p></div>
+        <div class="defect"><span class="id">③ RAG 知识库 + 图谱</span><p>63 条带事实编号的合成语料，检索结果附来源与编号，另有知识图谱与 Mermaid 视图。</p></div>
+        <div class="defect"><span class="id">④ 权限分层</span><p>HMAC 签名令牌；admin / 验房员 / 整改专员 / 质量经理 / 观察员五级权限，越权返回 403。</p></div>
+        <div class="defect"><span class="id">⑤ 在线部署</span><p>单端口 HTTP 服务，公网可访问；本页即为部署入口，完整接口见 <code>/docs</code>。</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-defects">
+    <div class="card">
+      <h2>缺陷台账 <span class="hint" id="defectHint"></span></h2>
+      <div id="defects">登录后加载。</div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-kb">
+    <div class="card">
+      <h2>知识库检索（RAG）</h2>
+      <div class="searchbar">
+        <input id="q" type="text" value="缺陷定位 红线" placeholder="检索事实 / 文档关键词">
+        <button id="searchBtn">检索</button>
+      </div>
+      <div id="hits">登录后检索。</div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-harness">
+    <div class="card">
+      <h2>Harness 评估 <button id="runBtn" style="float:right">运行评估</button></h2>
+      <div id="harness">登录后运行或查看报告。</div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-perm">
+    <div class="card">
+      <h2>权限分层</h2>
+      <table><thead><tr><th>角色</th><th>权限点</th></tr></thead><tbody>
+        <tr><td>租户管理员 admin</td><td>全部（*）</td></tr>
+        <tr><td>现场验房员 inspector</td><td>缺陷读/建、定位、知识库</td></tr>
+        <tr><td>整改专员 rectifier</td><td>缺陷读、定位、复核留痕、知识库</td></tr>
+        <tr><td>质量经理 auditor</td><td>缺陷读、审计、知识库、Harness</td></tr>
+        <tr><td>只读观察员 viewer</td><td>缺陷读、知识库</td></tr>
+      </tbody></table>
+      <p class="hint">令牌为 HMAC 签名的无状态格式，多实例下任意请求可独立验签（f41：不借用他人账号）。</p>
+    </div>
+    <div class="card">
+      <h2>业务边界与事实依据</h2>
+      <p>访谈事实编号覆盖 f00–f55；涉及停止条件（f05/f32/f40）时转人工兜底。定位建议附带置信度、命中词、事实引用，需人工确认后方可采纳。</p>
+      <p>详细材料见项目仓库的 <code>property-handover/</code> 与 <code>docs/技术方案.md</code>。</p>
+    </div>
+  </section>
+</main>
+
+<script>
+(function(){
+  var SHARE = new URLSearchParams(location.search).get('sharecode') || '';
+  var BASE = '';
+  var token = sessionStorage.getItem('fde_token') || '';
+  var currentUser = null;
+  var $ = function(id){return document.getElementById(id)};
+  function url(path){return BASE + path + (SHARE ? (path.indexOf('?')>=0?'&':'?')+'sharecode='+encodeURIComponent(SHARE) : '')}
+  function msg(t,err){var m=$('msg');m.innerHTML='<div class="'+(err?'err':'hint')+'">'+t+'</div>';if(!err)setTimeout(function(){m.innerHTML=''},3000)}
+  async function api(path,opt){
+    opt=opt||{};opt.headers=opt.headers||{};
+    if(token)opt.headers['X-Auth-Token']=token;
+    if(opt.body)opt.headers['Content-Type']='application/json';
+    var r=await fetch(url(path),opt);
+    if(r.status===403||r.status===401){msg('权限不足或会话失效，请重新登录',true);throw new Error('auth')}
+    var d=await r.json();
+    if(!r.ok)throw new Error(d.detail||('HTTP '+r.status));
+    return d;
+  }
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+
+  document.querySelectorAll('nav button').forEach(function(b){
+    b.onclick=function(){
+      document.querySelectorAll('nav button').forEach(function(x){x.classList.remove('active')});
+      document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('on')});
+      b.classList.add('active');$('p-'+b.dataset.p).classList.add('on');
+    }
+  });
+
+  $('loginBtn').onclick=async function(){
+    try{
+      var d=await api('/api/v1/auth/login',{method:'POST',body:JSON.stringify({name:$('name').value||'演示用户',role:$('role').value})});
+      token=d.token;sessionStorage.setItem('fde_token',token);currentUser=d;
+      $('who').style.display='';$('who').textContent='已登录：'+esc(d.name)+' · '+esc(d.label);
+      msg('登录成功，权限：'+d.permissions.join('、'));
+      loadAll();
+    }catch(e){msg('登录失败：'+e.message,true)}
+  };
+
+  async function loadStats(){
+    var d=await api('/api/v1/health');
+    $('stats').innerHTML=
+      '<div class="stat"><b>'+d.defects+'</b><span>演示缺陷</span></div>'+
+      '<div class="stat"><b>'+d.corpus+'</b><span>知识库语料</span></div>'+
+      '<div class="stat"><b>13</b><span>API 接口</span></div>'+
+      '<div class="stat"><b>5</b><span>权限角色</span></div>';
+  }
+  async function loadDefects(){
+    var d=await api('/api/v1/defects');
+    $('defectHint').textContent='共 '+d.summary.defect_count+' 条 · 主编号 '+d.summary.master_id_count+' 个 · 工单 '+d.summary.work_order_total+' 张';
+    $('defects').innerHTML='<div class="grid">'+d.items.map(function(x){
+      return '<div class="defect"><span class="id">'+esc(x.defect_id)+'</span><span class="unit">'+esc(x.unit)+' · '+esc(x.master_id)+'</span>'+
+        '<p>'+esc(x.description)+'</p>'+
+        '<div><span class="tag">资料 v'+esc(x.data_version)+'</span><span class="tag'+(x.attachments_complete?' ok':' warn')+'">'+(x.attachments_complete?'附件齐全':'附件缺失')+'</span>'+
+        '<span class="tag'+(x.reverify&&x.reverify.authorized?' ok':' warn')+'">'+(x.reverify&&x.reverify.authorized?'已复验':'未复验')+'</span></div>'+
+        '<div class="meta">快照 '+esc(x.snapshot_at)+' · 系统 '+esc(x.source_system)+'</div></div>'
+    }).join('')+'</div><p class="hint">'+esc(d.summary.dedupe_note)+'</p>';
+  }
+  async function doSearch(){
+    if(!token){msg('请先登录',true);return}
+    try{
+      var d=await api('/api/v1/knowledge/search?q='+encodeURIComponent($('q').value||'缺陷')+'&top_k=5');
+      $('hits').innerHTML='<p class="hint">语料 '+d.corpus_size+' 条 · 命中 '+d.total_hits+' 条 · 显示前 '+d.results.length+' 条</p>'+
+        d.results.map(function(r){
+          return '<div class="hit">'+esc(r.text)+'<div class="src">['+esc(r.fact_id)+'] '+esc(r.role||'')+' · 来源 '+esc(r.source)+' · 相关度 '+esc(r.score)+'</div></div>'
+        }).join('');
+    }catch(e){msg('检索失败：'+e.message,true)}
+  }
+  async function loadHarness(run){
+    if(!token){msg('请先登录',true);return}
+    try{
+      var d;
+      if(run){$('runBtn').disabled=true;d=await api('/api/v1/harness/run',{method:'POST'});$('runBtn').disabled=false}
+      else d=await api('/api/v1/harness/report');
+      if(d.note){$('harness').innerHTML='<p class="hint">'+esc(d.note)+'</p>';return}
+      $('harness').innerHTML='<div class="row"><div class="stat"><b>'+esc(d.score)+'</b><span>总分（'+esc(d.passed)+'/'+esc(d.total)+' 关）</span></div>'+
+        '<div class="stat"><b>'+esc(d.run_at).slice(0,19).replace('T',' ')+'</b><span>运行时间 UTC</span></div></div>'+
+        '<div style="height:12px"></div>'+d.gates.map(function(g){
+          return '<div class="gate"><div class="gh"><b>'+esc(g.id)+' · '+esc(g.name)+'</b><span class="tag '+(g.status==='PASS'?'ok':'warn')+'">'+esc(g.status)+'</span></div>'+
+            '<div class="hint">事实引用：'+(g.fact_refs||[]).map(esc).join('、')+'</div>'+
+            '<ul>'+g.checks.map(function(c){return '<li>'+(c.pass?'✓':'✗')+' '+esc(c.name)+' — '+esc(c.evidence)+'</li>'}).join('')+'</ul></div>'
+        }).join('')+'<p class="hint">'+esc(d.note||'')+'</p>';
+    }catch(e){$('runBtn').disabled=false;msg('评估失败：'+e.message,true)}
+  }
+  function loadAll(){
+    loadStats().catch(function(){});
+    if(token){loadDefects().catch(function(){});loadHarness(false).catch(function(){})}
+  }
+  $('searchBtn').onclick=doSearch;
+  $('q').onkeydown=function(e){if(e.key==='Enter')doSearch()};
+  $('runBtn').onclick=function(){loadHarness(true)};
+  loadAll();
+})();
+</script>
+</body>
+</html>
